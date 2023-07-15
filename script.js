@@ -1,5 +1,7 @@
 // script.js
 
+let storedImage = null;  // This will hold the loaded image
+
 // Function to load the image from the given path and call the drawImage function
 function loadImage() {
   const canvas = document.getElementById("imageCanvas");
@@ -29,6 +31,14 @@ function loadImage() {
 
     // Draw the image on the canvas
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    // Store the image for future redraws
+    storedImage = image;
+
+    // Create and size the drawing canvas
+    const drawCanvas = document.getElementById("drawCanvas");
+    drawCanvas.width = canvas.width;
+    drawCanvas.height = canvas.height;
   };
 }
 
@@ -40,16 +50,46 @@ function drawImage(context, image) {
   context.drawImage(image, 0, 0);
 }
 
-// Function to capture mouse events on the canvas and call the drawCircle function
+// Function to capture mousedown, mousemove, and mouseup events on the canvas
+// and call the drawCircle function
 function captureMouseEvents() {
-  const canvas = document.getElementById("imageCanvas");
-  const context = canvas.getContext("2d");
-  
-  canvas.addEventListener("mousedown", function(event) {
-    const x = event.offsetX;
-    const y = event.offsetY;
+  const drawCanvas = document.getElementById("drawCanvas");
+  const imageCanvas = document.getElementById("imageCanvas");
+  const drawContext = drawCanvas.getContext("2d");
+  const imageContext = imageCanvas.getContext("2d");
+
+  let isDrawing = false;
+
+  drawCanvas.addEventListener("mousedown", function(event) {
+    isDrawing = true;
+    const rect = drawCanvas.getBoundingClientRect();
+    const scaleX = drawCanvas.width / rect.width;
+    const scaleY = drawCanvas.height / rect.height;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
     
-    drawCircle(context, x, y);
+    drawCircle(drawContext, x, y);
+  });
+  
+  drawCanvas.addEventListener("mousemove", function(event) {
+    const rect = drawCanvas.getBoundingClientRect();
+    const scaleX = drawCanvas.width / rect.width;
+    const scaleY = drawCanvas.height / rect.height;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+  
+    // Clear the image canvas for the preview
+    imageContext.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+    imageContext.drawImage(storedImage, 0, 0, imageCanvas.width, imageCanvas.height);
+    imageContext.drawImage(drawCanvas, 0, 0);
+    
+    if (!isDrawing) {
+      drawPreviewCircle(imageContext, x, y);
+    }
+  });  
+
+  drawCanvas.addEventListener("mouseup", function(event) {
+    isDrawing = false;
   });
 }
 
@@ -64,20 +104,32 @@ function drawCircle(context, x, y) {
   context.stroke();
 }
 
+// Function to draw a preview circle on the canvas based on the mouse position
+function drawPreviewCircle(context, x, y) {
+  context.beginPath();
+  context.arc(x, y, 50, 0, 2 * Math.PI);
+  context.fillStyle = "rgba(255, 0, 0, 0.5)";  // Semi-transparent fill color
+  context.fill();  // Fill the circle
+  context.strokeStyle = "red";
+  context.lineWidth = 3;
+  context.stroke();
+}
+
 // Function to save the circled region as a PNG image mask
 function saveMaskImage() {
+  const drawCanvas = document.getElementById("drawCanvas");
   const canvas = document.getElementById("imageCanvas");
-  const context = canvas.getContext("2d");
+  const context = drawCanvas.getContext("2d");
   
   const maskCanvas = document.createElement("canvas");
-  maskCanvas.width = canvas.width;
-  maskCanvas.height = canvas.height;
+  maskCanvas.width = drawCanvas.width;
+  maskCanvas.height = drawCanvas.height;
   const maskContext = maskCanvas.getContext("2d");
   
   maskContext.fillStyle = "rgba(0, 0, 0, 0)";
   maskContext.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
   
-  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const imageData = context.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
   const pixels = imageData.data;
   
   for (let i = 0; i < pixels.length; i += 4) {
