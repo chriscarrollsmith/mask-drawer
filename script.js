@@ -83,7 +83,9 @@ function captureMouseEvents() {
     imageContext.drawImage(storedImage, 0, 0, imageCanvas.width, imageCanvas.height);
     imageContext.drawImage(drawCanvas, 0, 0);
     
-    if (!isDrawing) {
+    if (isDrawing) {
+      drawCircle(drawContext, x, y);
+    } else {
       drawPreviewCircle(imageContext, x, y);
     }
   });  
