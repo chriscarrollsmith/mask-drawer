@@ -1,0 +1,19 @@
+const canvas = document.getElementById("imageCanvas");
+const ctx = canvas.getContext("2d");
+
+// Function to draw the mask image
+function drawMaskImage() {
+  // Create a new image object
+  const maskImage = new Image();
+
+  // Set the source of the image to 'mask.png'
+  maskImage.src = "mask.png";
+
+  // When the image is loaded, draw it on the canvas
+  maskImage.onload = function() {
+    ctx.drawImage(maskImage, 0, 0);
+  };
+}
+
+// Call the drawMaskImage function to draw the mask image on the canvas
+drawMaskImage();

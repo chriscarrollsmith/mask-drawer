@@ -1,0 +1,204 @@
+Shared dependencies: 
+
+Plan for the Javascript app:
+
+File: index.html
+- Structure: Contains a basic HTML structure with a canvas element to display the image.
+- Variables exported: None.
+- DOM elements used: canvas element with id "imageCanvas".
+
+File: script.js
+- Structure: Contains the main logic of the app, including functions for loading the image, drawing the image on the canvas, capturing the mouse events, and saving the circled region as a mask image.
+- Variables exported: None.
+- Data schemas: None.
+- DOM elements used: canvas element with id "imageCanvas".
+- Function names: 
+  - loadImage: Loads the image from the given path and calls the drawImage function.
+  - drawImage: Draws the loaded image on the canvas.
+  - captureMouseEvents: Listens for mouse events on the canvas and calls the drawCircle function.
+  - drawCircle: Draws a circle on the canvas based on the mouse position.
+  - saveMaskImage: Saves the circled region as a PNG image mask.
+
+File: style.css
+- Structure: Contains the CSS styles for the app.
+- Variables exported: None.
+- DOM elements used: None.
+
+File: dog.png
+- Structure: A PNG image file with dimensions 1024x1024.
+- Variables exported: None.
+
+File: mask.png
+- Structure: A PNG image file with dimensions 1024x1024, initially transparent in the circled region and white outside the circled region.
+- Variables exported: None.
+
+Overall, the app consists of an HTML file for the structure, a JavaScript file for the logic, a CSS file for the styles, and two image files, 'dog.png' and 'mask.png', for displaying the original image and saving the mask image respectively. The JavaScript file handles loading the image, drawing it on the canvas, capturing the mouse events, and saving the circled region as a mask image.
+
+File paths: 
+
+index.html
+script.js
+style.css
+dog.png
+mask.png
+
+Source code: 
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Circle App</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <canvas id="imageCanvas"></canvas>
+    <script src="script.js"></script>
+</body>
+</html>
+// script.js
+
+// Function to load the image from the given path and call the drawImage function
+function loadImage() {
+  const canvas = document.getElementById("imageCanvas");
+  const context = canvas.getContext("2d");
+
+  const image = new Image();
+  image.src = "dog.png";
+
+  image.onload = function() {
+    // Get the aspect ratio of the image
+    const imageAspectRatio = image.width / image.height;
+
+    // Get the viewport dimensions
+    let viewportWidth = window.innerWidth;
+    let viewportHeight = window.innerHeight;
+
+    // Calculate the canvas dimensions to fit the image within the viewport while maintaining the image aspect ratio
+    if (viewportWidth < viewportHeight * imageAspectRatio) {
+      // The viewport is taller than the image, so set the canvas height based on the width
+      canvas.width = viewportWidth;
+      canvas.height = viewportWidth / imageAspectRatio;
+    } else {
+      // The viewport is wider than the image, so set the canvas width based on the height
+      canvas.width = viewportHeight * imageAspectRatio;
+      canvas.height = viewportHeight;
+    }
+
+    // Draw the image on the canvas
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  };
+}
+
+// Call the loadImage function on resize of the browser window
+window.addEventListener('resize', loadImage);
+
+// Function to draw the loaded image on the canvas
+function drawImage(context, image) {
+  context.drawImage(image, 0, 0);
+}
+
+// Function to capture mouse events on the canvas and call the drawCircle function
+function captureMouseEvents() {
+  const canvas = document.getElementById("imageCanvas");
+  const context = canvas.getContext("2d");
+  
+  canvas.addEventListener("mousedown", function(event) {
+    const x = event.offsetX;
+    const y = event.offsetY;
+    
+    drawCircle(context, x, y);
+  });
+}
+
+// Function to draw a circle on the canvas based on the mouse position
+function drawCircle(context, x, y) {
+  context.beginPath();
+  context.arc(x, y, 50, 0, 2 * Math.PI);
+  context.strokeStyle = "red";
+  context.lineWidth = 3;
+  context.stroke();
+}
+
+// Function to save the circled region as a PNG image mask
+function saveMaskImage() {
+  const canvas = document.getElementById("imageCanvas");
+  const context = canvas.getContext("2d");
+  
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = canvas.width;
+  maskCanvas.height = canvas.height;
+  const maskContext = maskCanvas.getContext("2d");
+  
+  maskContext.fillStyle = "rgba(0, 0, 0, 0)";
+  maskContext.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+  
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  
+  for (let i = 0; i < pixels.length; i += 4) {
+    const r = pixels[i];
+    const g = pixels[i + 1];
+    const b = pixels[i + 2];
+    
+    if (r === 255 && g === 0 && b === 0) {
+      pixels[i + 3] = 0;
+    } else {
+      pixels[i + 3] = 255;
+    }
+  }
+  
+  maskContext.putImageData(imageData, 0, 0);
+  
+  const maskImage = maskCanvas.toDataURL("image/png");
+  
+  const link = document.createElement("a");
+  link.href = maskImage;
+  link.download = "mask.png";
+  link.click();
+}
+
+// Call the functions to load the image and capture mouse events
+loadImage();
+captureMouseEvents();
+/* style.css */
+
+/* Set the width and height of the canvas */
+#imageCanvas {
+  width: 1024px;
+  height: 1024px;
+  border: 1px solid black;
+}
+
+/* Add additional styles here as needed */
+const code = `// File: dog.png
+
+// No code is needed for the dog.png file.
+// It is a PNG image file and does not require any JavaScript code.
+
+// This file is used to display the original image in the app.
+// It should be placed in the same directory as the other app files.
+
+// Please ensure that the image file named 'dog.png' with dimensions 1024x1024 exists at the specified path.
+
+`;
+
+return code;
+const canvas = document.getElementById("imageCanvas");
+const ctx = canvas.getContext("2d");
+
+// Function to draw the mask image
+function drawMaskImage() {
+  // Create a new image object
+  const maskImage = new Image();
+
+  // Set the source of the image to 'mask.png'
+  maskImage.src = "mask.png";
+
+  // When the image is loaded, draw it on the canvas
+  maskImage.onload = function() {
+    ctx.drawImage(maskImage, 0, 0);
+  };
+}
+
+// Call the drawMaskImage function to draw the mask image on the canvas
+drawMaskImage();
